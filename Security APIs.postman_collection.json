@@ -1,0 +1,1552 @@
+{
+	"info": {
+		"_postman_id": "6681f820-cf73-4652-99be-c75a9e509be9",
+		"name": "Security APIs",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "NGFW",
+			"item": [
+				{
+					"name": "Generate Authentication Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e06f10be-77d8-41d8-86ba-449a421ad7ae",
+								"type": "text/javascript",
+								"exec": [
+									"var token = postman.getResponseHeader(\"X-auth-access-token\");",
+									"var domain_uuid = postman.getResponseHeader(\"DOMAIN_UUID\");",
+									"postman.setEnvironmentVariable(\"fmc_token\", token);",
+									"postman.setEnvironmentVariable(\"fmc_domain\", domain_uuid);"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{fmc_pasword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{fmc_user}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {},
+						"url": {
+							"raw": "https://{{fmc_hostname}}/api/fmc_platform/v1/auth/generatetoken",
+							"protocol": "https",
+							"host": [
+								"{{fmc_hostname}}"
+							],
+							"path": [
+								"api",
+								"fmc_platform",
+								"v1",
+								"auth",
+								"generatetoken"
+							]
+						},
+						"description": "FMC REST API call to generate authentication token for subsequent API calls"
+					},
+					"response": []
+				},
+				{
+					"name": "Access Policies",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "351423b1-2ff6-407c-b1e8-98d4fe0c0191",
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"for (var a in jsonData['items']){",
+									"    if (jsonData['items'][a]['name'] == '_CLUS18_AP'){",
+									"        postman.setEnvironmentVariable('fmc_policy', jsonData['items'][a]['id']);",
+									"    }",
+									"}",
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-auth-access-token",
+								"value": "{{fmc_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{fmc_hostname}}/api/fmc_config/v1/domain/{{fmc_domain}}/policy/accesspolicies",
+							"protocol": "https",
+							"host": [
+								"{{fmc_hostname}}"
+							],
+							"path": [
+								"api",
+								"fmc_config",
+								"v1",
+								"domain",
+								"{{fmc_domain}}",
+								"policy",
+								"accesspolicies"
+							]
+						},
+						"description": "REST API call to get all access polcies from the FMC and save the one we are interested in as a variable"
+					},
+					"response": []
+				},
+				{
+					"name": "Access Rules",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "5b32c97c-31d3-42db-b202-c6c8df1feb29",
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"for (var a in jsonData['items']){",
+									"    if (jsonData['items'][a]['name'] == 'Default Allow'){",
+									"        postman.setEnvironmentVariable('fmc_rule', jsonData['items'][a]['id']);",
+									"    }",
+									"}",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-auth-access-token",
+								"value": "{{fmc_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{fmc_hostname}}/api/fmc_config/v1/domain/{{fmc_domain}}/policy/accesspolicies/{{fmc_policy}}/accessrules",
+							"protocol": "https",
+							"host": [
+								"{{fmc_hostname}}"
+							],
+							"path": [
+								"api",
+								"fmc_config",
+								"v1",
+								"domain",
+								"{{fmc_domain}}",
+								"policy",
+								"accesspolicies",
+								"{{fmc_policy}}",
+								"accessrules"
+							]
+						},
+						"description": "REST API call to get all rules from a defined Policy and store a single rule of interest for modification"
+					},
+					"response": []
+				},
+				{
+					"name": "Access Rule Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-auth-access-token",
+								"value": "{{fmc_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{fmc_hostname}}/api/fmc_config/v1/domain/{{fmc_domain}}/policy/accesspolicies/{{fmc_policy}}/accessrules/{{fmc_rule}}",
+							"protocol": "https",
+							"host": [
+								"{{fmc_hostname}}"
+							],
+							"path": [
+								"api",
+								"fmc_config",
+								"v1",
+								"domain",
+								"{{fmc_domain}}",
+								"policy",
+								"accesspolicies",
+								"{{fmc_policy}}",
+								"accessrules",
+								"{{fmc_rule}}"
+							]
+						},
+						"description": "REST API call to get details of a specific rule inside an Access Policy"
+					},
+					"response": []
+				},
+				{
+					"name": "New Access Rule in Policy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-auth-access-token",
+								"value": "{{fmc_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"action\": \"ALLOW\",\r\n    \"enabled\": true,\r\n    \"type\": \"AccessRule\",\r\n    \"sendEventsToFMC\": true,\r\n    \"vlanTags\": {},\r\n    \"destinationNetworks\": {\r\n        \"literals\": [\r\n          {\r\n            \"type\": \"Network\",\r\n            \"value\": \"10.1.1.0/24\"\r\n          }\r\n        ]\r\n    },\r\n    \"variableSet\": {\r\n        \"name\": \"Default-Set\",\r\n        \"id\": \"76fa83ea-c972-11e2-8be8-8e45bb1343c0\",\r\n        \"type\": \"VariableSet\"\r\n    },\r\n     \"ipsPolicy\": {\r\n        \"name\": \"Balanced Security and Connectivity\",\r\n        \"id\": \"abba00a0-cf29-425c-9d75-49699aadc898\",\r\n        \"type\": \"IntrusionPolicy\"\r\n    },\r\n    \"logBegin\": false,\r\n    \"logEnd\": true,\r\n    \"logFiles\": false,\r\n    \"name\": \"_CLUS18_api-rule\"\r\n    }"
+						},
+						"url": {
+							"raw": "https://{{fmc_hostname}}/api/fmc_config/v1/domain/{{fmc_domain}}/policy/accesspolicies/{{fmc_policy}}/accessrules",
+							"protocol": "https",
+							"host": [
+								"{{fmc_hostname}}"
+							],
+							"path": [
+								"api",
+								"fmc_config",
+								"v1",
+								"domain",
+								"{{fmc_domain}}",
+								"policy",
+								"accesspolicies",
+								"{{fmc_policy}}",
+								"accessrules"
+							]
+						},
+						"description": "REST call to make a new Access rule inside a policy"
+					},
+					"response": []
+				},
+				{
+					"name": "New Bulk Access Rule in Policy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-auth-access-token",
+								"value": "{{fmc_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n\t{\r\n    \"action\": \"ALLOW\",\r\n    \"enabled\": true,\r\n    \"type\": \"AccessRule\",\r\n    \"sendEventsToFMC\": true,\r\n    \"vlanTags\": {},\r\n    \"destinationNetworks\": {\r\n        \"literals\": [\r\n          {\r\n            \"type\": \"Network\",\r\n            \"value\": \"10.1.1.0/24\"\r\n          }\r\n        ]\r\n    },\r\n    \"variableSet\": {\r\n        \"name\": \"Default-Set\",\r\n        \"id\": \"76fa83ea-c972-11e2-8be8-8e45bb1343c0\",\r\n        \"type\": \"VariableSet\"\r\n    },\r\n     \"ipsPolicy\": {\r\n        \"name\": \"Balanced Security and Connectivity\",\r\n        \"id\": \"abba00a0-cf29-425c-9d75-49699aadc898\",\r\n        \"type\": \"IntrusionPolicy\"\r\n    },\r\n    \"logBegin\": false,\r\n    \"logEnd\": true,\r\n    \"logFiles\": false,\r\n    \"name\": \"_sevt2018-api-rule-1\"\r\n    },\r\n   \t{\r\n    \"action\": \"ALLOW\",\r\n    \"enabled\": true,\r\n    \"type\": \"AccessRule\",\r\n    \"sendEventsToFMC\": true,\r\n    \"vlanTags\": {},\r\n    \"destinationNetworks\": {\r\n        \"literals\": [\r\n          {\r\n            \"type\": \"Network\",\r\n            \"value\": \"10.2.1.0/24\"\r\n          }\r\n        ]\r\n    },\r\n    \"variableSet\": {\r\n        \"name\": \"Default-Set\",\r\n        \"id\": \"76fa83ea-c972-11e2-8be8-8e45bb1343c0\",\r\n        \"type\": \"VariableSet\"\r\n    },\r\n     \"ipsPolicy\": {\r\n        \"name\": \"Balanced Security and Connectivity\",\r\n        \"id\": \"abba00a0-cf29-425c-9d75-49699aadc898\",\r\n        \"type\": \"IntrusionPolicy\"\r\n    },\r\n    \"logBegin\": false,\r\n    \"logEnd\": true,\r\n    \"logFiles\": false,\r\n    \"name\": \"_sevt2018-api-rule-2\"\r\n    }\r\n]"
+						},
+						"url": {
+							"raw": "https://{{fmc_hostname}}/api/fmc_config/v1/domain/{{fmc_domain}}/policy/accesspolicies/{{fmc_policy}}/accessrules?bulk=true&section=mandatory",
+							"protocol": "https",
+							"host": [
+								"{{fmc_hostname}}"
+							],
+							"path": [
+								"api",
+								"fmc_config",
+								"v1",
+								"domain",
+								"{{fmc_domain}}",
+								"policy",
+								"accesspolicies",
+								"{{fmc_policy}}",
+								"accessrules"
+							],
+							"query": [
+								{
+									"key": "bulk",
+									"value": "true"
+								},
+								{
+									"key": "section",
+									"value": "mandatory"
+								}
+							]
+						},
+						"description": "REST call to make a new Access rule inside a policy in bulk"
+					},
+					"response": []
+				},
+				{
+					"name": "All Configured Intelligence Feeds",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-auth-access-token",
+								"value": "{{fmc_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{fmc_hostname}}/api/fmc_tid/v1/domain/{{fmc_domain}}/tid/source?expanded=true",
+							"protocol": "https",
+							"host": [
+								"{{fmc_hostname}}"
+							],
+							"path": [
+								"api",
+								"fmc_tid",
+								"v1",
+								"domain",
+								"{{fmc_domain}}",
+								"tid",
+								"source"
+							],
+							"query": [
+								{
+									"key": "expanded",
+									"value": "true"
+								}
+							]
+						},
+						"description": "REST call to get all configurted CTID feeds in FMC"
+					},
+					"response": []
+				},
+				{
+					"name": "Add custom intelligence feed",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-auth-access-token",
+								"value": "{{fmc_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"startHour\": 2,\r\n  \"name\": \"SANS Suspicious Domains\",\r\n  \"description\": \"SANS medium sensitivity domain listing\",\r\n  \"feedType\": \"flatfile\",\r\n  \"feedContent\": \"DomainNameObjectType\",\r\n  \"delivery\": \"url\",\r\n  \"uri\": \"https://isc.sans.edu/feeds/suspiciousdomains_Medium.txt\",\r\n  \"refresh\": 1440,\r\n  \"version\": \"1.0.0\",\r\n  \"downloadOn\": true,\r\n  \"params\": {\r\n    \"selfSignedServerCertificate\": \"true\",\r\n    \"hostnameVerifier\": \"allow_all\"\r\n  },\r\n  \"property\": {\r\n    \"ttl\": 90,\r\n    \"publish\": true,\r\n    \"action\": \"block\"\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "https://{{fmc_hostname}}/api/fmc_tid/v1/domain/{{fmc_domain}}/tid/source",
+							"protocol": "https",
+							"host": [
+								"{{fmc_hostname}}"
+							],
+							"path": [
+								"api",
+								"fmc_tid",
+								"v1",
+								"domain",
+								"{{fmc_domain}}",
+								"tid",
+								"source"
+							]
+						},
+						"description": "REST call to add a custom intelligence feed"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "AMP for Endpoints",
+			"item": [
+				{
+					"name": "All Computers",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "f6ec7e94-074f-46cb-8820-39c168c27270",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"for (var a in jsonData['data']){",
+									"        for (var net_index in jsonData['data'][a]['network_addresses']){",
+									"            postman.setEnvironmentVariable(jsonData['data'][a]['connector_guid'],jsonData['data'][a]['network_addresses'][net_index]['mac'] )",
+									"        }",
+									"}",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{Client ID}}:{{API Key}}@api.amp.cisco.com/v1/computers",
+							"protocol": "https",
+							"host": [
+								"api",
+								"amp",
+								"cisco",
+								"com"
+							],
+							"auth": {
+								"user": "{{Client ID}}",
+								"password": "{{API Key}}"
+							},
+							"path": [
+								"v1",
+								"computers"
+							]
+						},
+						"description": "Get a listing of all the computers in the network, looking specifically for what we want"
+					},
+					"response": []
+				},
+				{
+					"name": "All Events for a specific Computer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "01e11e00-8007-4189-ab18-85a7b6924745",
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"postman.setEnvironmentVariable('threatgrid_sha', jsonData['data'][0]['file']['identity']['sha256']);",
+									"",
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{amp4e_client_id}}:{{amp4e_api_key}}@{{amp4e_host}}/v1/events?connector_guid[]={{amp4e_computer}}&event_type[]=1107296272",
+							"protocol": "https",
+							"host": [
+								"{{amp4e_host}}"
+							],
+							"auth": {
+								"user": "{{amp4e_client_id}}",
+								"password": "{{amp4e_api_key}}"
+							},
+							"path": [
+								"v1",
+								"events"
+							],
+							"query": [
+								{
+									"key": "connector_guid[]",
+									"value": "{{amp4e_computer}}"
+								},
+								{
+									"key": "event_type[]",
+									"value": "1107296272"
+								}
+							]
+						},
+						"description": "Get a listing of all the events for a specific computer when the quarantine failed"
+					},
+					"response": []
+				},
+				{
+					"name": "Move Computer to new Group",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "group_guid",
+									"value": "{{amp4e_new_group}}",
+									"type": "text"
+								},
+								{
+									"key": "active",
+									"value": "false",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{amp4e_client_id}}:{{amp4e_api_key}}@{{amp4e_host}}/v1/computers/{{amp4e_computer}}",
+							"protocol": "https",
+							"host": [
+								"{{amp4e_host}}"
+							],
+							"auth": {
+								"user": "{{amp4e_client_id}}",
+								"password": "{{amp4e_api_key}}"
+							},
+							"path": [
+								"v1",
+								"computers",
+								"{{amp4e_computer}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "All Groups",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "23d0b71a-a864-43cf-beff-382bf75f4aab",
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"for (var a in jsonData['data']){",
+									"    if (jsonData['data'][a]['name'] == 'Triage'){",
+									"        postman.setEnvironmentVariable('amp4e_new_group', jsonData['data'][a]['guid']);",
+									"    }",
+									"}",
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{amp4e_client_id}}:{{amp4e_api_key}}@{{amp4e_host}}/v1/groups",
+							"protocol": "https",
+							"host": [
+								"{{amp4e_host}}"
+							],
+							"auth": {
+								"user": "{{amp4e_client_id}}",
+								"password": "{{amp4e_api_key}}"
+							},
+							"path": [
+								"v1",
+								"groups"
+							]
+						},
+						"description": "Get a listing of all the groups in AMP for Endpoints"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Identity Services Engine",
+			"item": [
+				{
+					"name": "All ANC Policies",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{ise_username}}:{{ise_password}}@{{ise_host}}/ers/config/ancpolicy",
+							"protocol": "https",
+							"host": [
+								"{{ise_host}}"
+							],
+							"auth": {
+								"user": "{{ise_username}}",
+								"password": "{{ise_password}}"
+							},
+							"path": [
+								"ers",
+								"config",
+								"ancpolicy"
+							]
+						},
+						"description": "Get all ANC policies from ISE"
+					},
+					"response": []
+				},
+				{
+					"name": "All ANC Endpoints",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{ise_username}}:{{ise_password}}@{{ise_host}}/ers/config/ancendpoint",
+							"protocol": "https",
+							"host": [
+								"{{ise_host}}"
+							],
+							"auth": {
+								"user": "{{ise_username}}",
+								"password": "{{ise_password}}"
+							},
+							"path": [
+								"ers",
+								"config",
+								"ancendpoint"
+							]
+						},
+						"description": "Get all ANC Endpoints from ISE"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Umbrella",
+			"item": [
+				{
+					"name": "Get Security reports for domain",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{investigate_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://investigate.api.umbrella.com/security/name/xbool.ru.json",
+							"protocol": "https",
+							"host": [
+								"investigate",
+								"api",
+								"umbrella",
+								"com"
+							],
+							"path": [
+								"security",
+								"name",
+								"xbool.ru.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check Bulk domains against Investigate",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "7757772d-4a0f-4d4d-95a6-af5d277acd01",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{investigate_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.google.com\",\"apis.google.com\",\"upload.wikimedia.org\",\"www.google.com\",\"www.gstatic.com\",\"adservice.google.com\",\"ssl.gstatic.com\",\"login.wikimedia.org\",\"ieonline.microsoft.com\",\"en.wikipedia.org\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"dist.torproject.org\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwff.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwff.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwff.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwff.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwff.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwff.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"time.windows.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"time.windows.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"dist.torproject.org\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwff.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"time.windows.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwff.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\",\"www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwff.com\"\r\n]"
+						},
+						"url": {
+							"raw": "https://investigate.api.umbrella.com/domains/categorization/",
+							"protocol": "https",
+							"host": [
+								"investigate",
+								"api",
+								"umbrella",
+								"com"
+							],
+							"path": [
+								"domains",
+								"categorization",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add domains to umbrella enforcement",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[{\r\n    \"alertTime\": \"2013-02-08T11:14:26.0Z\",\r\n    \"deviceId\": \"ba6a59f4-e692-4724-ba36-c28132c761de\",\r\n    \"deviceVersion\": \"13.7a\",\r\n    \"dstDomain\": \"internetbadguys.com\",\r\n    \"dstUrl\": \"http://internetbadguys.com/a-bad-url\",\r\n    \"eventTime\": \"2013-02-08T09:30:26.0Z\",\r\n    \"protocolVersion\": \"1.0a\",\r\n    \"providerName\": \"Security Platform\"\r\n},{\r\n    \"alertTime\": \"2015-02-08T11:14:26.0Z\",\r\n    \"deviceId\": \"ba6a59f4-e692-4724-ba36-c28132c761de\",\r\n    \"deviceVersion\": \"13.7a\",\r\n    \"dstDomain\": \"moarinternetbadguys.com\",\r\n    \"dstUrl\": \"http://moarinternetbadguys.com/a-bad-url-again\",\r\n    \"eventTime\": \"2015-02-08T09:30:26.0Z\",\r\n    \"protocolVersion\": \"1.0a\",\r\n    \"providerName\": \"Security Platform\"\r\n}]"
+						},
+						"url": {
+							"raw": "https://{{umbrella_host}}/1.0/events?customerKey={{umbrella_key}}",
+							"protocol": "https",
+							"host": [
+								"{{umbrella_host}}"
+							],
+							"path": [
+								"1.0",
+								"events"
+							],
+							"query": [
+								{
+									"key": "customerKey",
+									"value": "{{umbrella_key}}"
+								}
+							]
+						},
+						"description": "using the umbrella enforcement API add domains to the custom integration"
+					},
+					"response": []
+				},
+				{
+					"name": "Get all domains in a custom Enforcement List",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{umbrella_host}}/1.0/domains?customerKey={{umbrella_key}}",
+							"protocol": "https",
+							"host": [
+								"{{umbrella_host}}"
+							],
+							"path": [
+								"1.0",
+								"domains"
+							],
+							"query": [
+								{
+									"key": "customerKey",
+									"value": "{{umbrella_key}}"
+								}
+							]
+						},
+						"description": "Using the umbrella enforcement API get all domains in a List."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Threat Grid",
+			"item": [
+				{
+					"name": "Request Report",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "1d6a80e0-ecb0-4618-a858-4dcc4937e373",
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"postman.setEnvironmentVariable('threatgrid_sample_id', jsonData['data']['items'][0]['sample']);",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{threatgrid_host}}/api/v2/samples/search?checksum_sample={{threatgrid_sha}}&api_key={{threatgrid_key}}",
+							"protocol": "https",
+							"host": [
+								"{{threatgrid_host}}"
+							],
+							"path": [
+								"api",
+								"v2",
+								"samples",
+								"search"
+							],
+							"query": [
+								{
+									"key": "checksum_sample",
+									"value": "{{threatgrid_sha}}"
+								},
+								{
+									"key": "api_key",
+									"value": "{{threatgrid_key}}"
+								}
+							]
+						},
+						"description": "Request a TG analysis Report with a given SHA-256"
+					},
+					"response": []
+				},
+				{
+					"name": "Request Sample Domains",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e52ce092-b36e-4e3e-bc5f-b6ab2a86e736",
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"var domains = [];",
+									"for (var a in jsonData['data']['items']){",
+									"    domains.push (\"\\\"\"+jsonData['data']['items'][a]['domain']+\"\\\"\");",
+									"}",
+									"postman.setEnvironmentVariable('umbrella_domains', domains);",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{threatgrid_host}}/api/v2/samples/feeds/domains?sample={{threatgrid_sample_id}}&after=2017-02-01&api_key={{threatgrid_key}}",
+							"protocol": "https",
+							"host": [
+								"{{threatgrid_host}}"
+							],
+							"path": [
+								"api",
+								"v2",
+								"samples",
+								"feeds",
+								"domains"
+							],
+							"query": [
+								{
+									"key": "sample",
+									"value": "{{threatgrid_sample_id}}"
+								},
+								{
+									"key": "after",
+									"value": "2017-02-01"
+								},
+								{
+									"key": "api_key",
+									"value": "{{threatgrid_key}}"
+								}
+							]
+						},
+						"description": "Request all domains for a specific sample in TG and store them in an array to get more data out of them"
+					},
+					"response": []
+				},
+				{
+					"name": "Feed in STIX format",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{threatgrid_host}}/api/v3/feeds/ransomware-dns_2017-12-08.stix?api_key={{threatgrid_key}}",
+							"protocol": "https",
+							"host": [
+								"{{threatgrid_host}}"
+							],
+							"path": [
+								"api",
+								"v3",
+								"feeds",
+								"ransomware-dns_2017-12-08.stix"
+							],
+							"query": [
+								{
+									"key": "api_key",
+									"value": "{{threatgrid_key}}"
+								}
+							]
+						},
+						"description": "Grab a feed in STIX format for ransomware DNS"
+					},
+					"response": []
+				},
+				{
+					"name": "Feed in JSON format",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{threatgrid_host}}/api/v3/feeds/dga-dns_2017-12-08.json?api_key={{threatgrid_key}}",
+							"protocol": "https",
+							"host": [
+								"{{threatgrid_host}}"
+							],
+							"path": [
+								"api",
+								"v3",
+								"feeds",
+								"dga-dns_2017-12-08.json"
+							],
+							"query": [
+								{
+									"key": "api_key",
+									"value": "{{threatgrid_key}}"
+								}
+							]
+						},
+						"description": "Grab a feed in JSON format for ransomware DNS"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "API Workflow",
+			"item": [
+				{
+					"name": "1.) Find all events where Malware Executed",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "01e11e00-8007-4189-ab18-85a7b6924745",
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"postman.setEnvironmentVariable('threatgrid_sha', jsonData['data'][0]['file']['identity']['sha256']);",
+									"",
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{amp4e_client_id}}:{{amp4e_api_key}}@{{amp4e_host}}/v1/events?connector_guid[]={{amp4e_computer}}&event_type[]=1107296272",
+							"protocol": "https",
+							"host": [
+								"{{amp4e_host}}"
+							],
+							"auth": {
+								"user": "{{amp4e_client_id}}",
+								"password": "{{amp4e_api_key}}"
+							},
+							"path": [
+								"v1",
+								"events"
+							],
+							"query": [
+								{
+									"key": "connector_guid[]",
+									"value": "{{amp4e_computer}}"
+								},
+								{
+									"key": "event_type[]",
+									"value": "1107296272"
+								}
+							]
+						},
+						"description": "Get a listing of all the events for a specific computer when the quarantine failed"
+					},
+					"response": []
+				},
+				{
+					"name": "2.) Find Endpoint Details for Remediation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "f6ec7e94-074f-46cb-8820-39c168c27270",
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"for (var a in jsonData['data']){",
+									"    if (jsonData['data'][a]['hostname'] == 'Demo_TeslaCrypt'){",
+									"        postman.setEnvironmentVariable('amp4e_computer', jsonData['data'][a]['connector_guid']);",
+									"        postman.setEnvironmentVariable('ise_mac', jsonData['data'][a]['network_addresses'][0]['mac'])",
+									"    }",
+									"    ",
+									"}",
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{amp4e_client_id}}:{{amp4e_api_key}}@{{amp4e_host}}/v1/computers",
+							"protocol": "https",
+							"host": [
+								"{{amp4e_host}}"
+							],
+							"auth": {
+								"user": "{{amp4e_client_id}}",
+								"password": "{{amp4e_api_key}}"
+							},
+							"path": [
+								"v1",
+								"computers"
+							]
+						},
+						"description": "Get a listing of all the computers in the network, looking specifically for what we want"
+					},
+					"response": []
+				},
+				{
+					"name": "3.) Nuke the Endpoint to Prevent Further Breach",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n\t\t\"OperationAdditionalData\": {\r\n\t\t\"additionalData\": [{\r\n\t\t\"name\": \"macAddress\",\r\n\t\t\"value\": \"{{ise_mac}}\"\r\n\t\t},\r\n\t\t{\r\n\t\t\"name\": \"policyName\",\r\n\t\t\"value\": \"ANC-KickFromNetwork\"\r\n\t\t}]\r\n\t\t}\r\n\t\t}"
+						},
+						"url": {
+							"raw": "https://{{ise_username}}:{{ise_password}}@{{ise_host}}/ers/config/ancendpoint/apply",
+							"protocol": "https",
+							"host": [
+								"{{ise_host}}"
+							],
+							"auth": {
+								"user": "{{ise_username}}",
+								"password": "{{ise_password}}"
+							},
+							"path": [
+								"ers",
+								"config",
+								"ancendpoint",
+								"apply"
+							]
+						},
+						"description": "Get all ANC Endpoints from ISE"
+					},
+					"response": []
+				},
+				{
+					"name": "4.) Find samples in Threat Grid",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "1d6a80e0-ecb0-4618-a858-4dcc4937e373",
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"postman.setEnvironmentVariable('threatgrid_sample_id', jsonData['data']['items'][0]['sample']);",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{threatgrid_host}}/api/v2/samples/search?checksum_sample={{threatgrid_sha}}&api_key={{threatgrid_key}}",
+							"protocol": "https",
+							"host": [
+								"{{threatgrid_host}}"
+							],
+							"path": [
+								"api",
+								"v2",
+								"samples",
+								"search"
+							],
+							"query": [
+								{
+									"key": "checksum_sample",
+									"value": "{{threatgrid_sha}}"
+								},
+								{
+									"key": "api_key",
+									"value": "{{threatgrid_key}}"
+								}
+							]
+						},
+						"description": "Request a TG analysis Report with a given SHA-256"
+					},
+					"response": []
+				},
+				{
+					"name": "5.) Get all sample domains to analyze",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e52ce092-b36e-4e3e-bc5f-b6ab2a86e736",
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"var domains = [];",
+									"for (var a in jsonData['data']['items']){",
+									"    domains.push (\"\\\"\"+jsonData['data']['items'][a]['domain']+\"\\\"\");",
+									"}",
+									"postman.setEnvironmentVariable('umbrella_domains', domains);",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{threatgrid_host}}/api/v2/samples/feeds/domains?sample={{threatgrid_sample_id}}&after=2017-02-01&api_key={{threatgrid_key}}",
+							"protocol": "https",
+							"host": [
+								"{{threatgrid_host}}"
+							],
+							"path": [
+								"api",
+								"v2",
+								"samples",
+								"feeds",
+								"domains"
+							],
+							"query": [
+								{
+									"key": "sample",
+									"value": "{{threatgrid_sample_id}}"
+								},
+								{
+									"key": "after",
+									"value": "2017-02-01"
+								},
+								{
+									"key": "api_key",
+									"value": "{{threatgrid_key}}"
+								}
+							]
+						},
+						"description": "Request all domains for a specific sample in TG and store them in an array to get more data out of them"
+					},
+					"response": []
+				},
+				{
+					"name": "6.) Check all domains against Investigate",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fe162ccf-a038-43b1-81d0-0e68c87df6e3",
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"var blacklist = []",
+									"var suspect = []",
+									"for (var key in jsonData){",
+									"    if(jsonData[key][\"status\"]==-1){",
+									"        blacklist.push(key)",
+									"        postman.setEnvironmentVariable('umbrella_blacklist', blacklist)",
+									"    }else if (jsonData[key][\"status\"]==0){",
+									"        suspect.push(key)",
+									"        postman.setEnvironmentVariable('umbrella_suspect', suspect)",
+									"    }",
+									"}",
+									"",
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{investigate_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[{{umbrella_domains}}]"
+						},
+						"url": {
+							"raw": "https://investigate.api.umbrella.com/domains/categorization/",
+							"protocol": "https",
+							"host": [
+								"investigate",
+								"api",
+								"umbrella",
+								"com"
+							],
+							"path": [
+								"domains",
+								"categorization",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "7.) For suspect domains get more details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "f6ddede4-9f68-49b8-871f-688d657236f3",
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"var current_list = environment.umbrella_blacklist.split(\",\");",
+									"if (jsonData[\"dga_score\"]<-50){",
+									"    current_list.push(environment.umbrella_suspect);",
+									"    postman.setEnvironmentVariable('umbrella_blacklist', current_list);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{investigate_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://investigate.api.umbrella.com/security/name/{{umbrella_suspect}}.json",
+							"protocol": "https",
+							"host": [
+								"investigate",
+								"api",
+								"umbrella",
+								"com"
+							],
+							"path": [
+								"security",
+								"name",
+								"{{umbrella_suspect}}.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "8.) Enforce on bad Domains in Umbrella",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "1518e4c7-bc82-453a-91d6-3c1dd02d8e3a",
+								"type": "text/javascript",
+								"exec": [
+									"var current_list = environment.umbrella_blacklist.split(\",\");",
+									"for (var a in current_list){",
+									"    postman.setEnvironmentVariable(\"umbrella_blacklist_entry_\"+a, current_list[a])",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[{\r\n    \"alertTime\": \"2013-02-08T11:14:26.0Z\",\r\n    \"deviceId\": \"ba6a59f4-e692-4724-ba36-c28132c761de\",\r\n    \"deviceVersion\": \"13.7a\",\r\n    \"dstDomain\": \"{{umbrella_blacklist_entry_0}}\",\r\n    \"dstUrl\": \"http://{{umbrella_blacklist_entry_0}}/a-bad-url\",\r\n    \"eventTime\": \"2013-02-08T09:30:26.0Z\",\r\n    \"protocolVersion\": \"1.0a\",\r\n    \"providerName\": \"Security Platform\"\r\n},{\r\n    \"alertTime\": \"2015-02-08T11:14:26.0Z\",\r\n    \"deviceId\": \"ba6a59f4-e692-4724-ba36-c28132c761de\",\r\n    \"deviceVersion\": \"13.7a\",\r\n    \"dstDomain\": \"{{umbrella_blacklist_entry_1}}\",\r\n    \"dstUrl\": \"{{umbrella_blacklist_entry_1}}\",\r\n    \"eventTime\": \"2015-02-08T09:30:26.0Z\",\r\n    \"protocolVersion\": \"1.0a\",\r\n    \"providerName\": \"Security Platform\"\r\n}]"
+						},
+						"url": {
+							"raw": "https://{{umbrella_host}}/1.0/events?customerKey={{umbrella_key}}",
+							"protocol": "https",
+							"host": [
+								"{{umbrella_host}}"
+							],
+							"path": [
+								"1.0",
+								"events"
+							],
+							"query": [
+								{
+									"key": "customerKey",
+									"value": "{{umbrella_key}}"
+								}
+							]
+						},
+						"description": "using the umbrella enforcement API add domains to the custom integration"
+					},
+					"response": []
+				},
+				{
+					"name": "9.) Research other Ransomware Domains to protect",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "19d90bf6-32a8-4530-8826-9a480feb2c1b",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "884dfba9-058b-4a7b-b2ae-8c33aef50908",
+								"type": "text/javascript",
+								"exec": [
+									"postman.setEnvironmentVariable('threatgrid_feed', pm.request.url)"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{threatgrid_host}}/api/v3/feeds/ransomware-dns_2017-12-08.stix?api_key={{threatgrid_key}}",
+							"protocol": "https",
+							"host": [
+								"{{threatgrid_host}}"
+							],
+							"path": [
+								"api",
+								"v3",
+								"feeds",
+								"ransomware-dns_2017-12-08.stix"
+							],
+							"query": [
+								{
+									"key": "api_key",
+									"value": "{{threatgrid_key}}"
+								}
+							]
+						},
+						"description": "Grab a feed in STIX format for ransomware DNS"
+					},
+					"response": []
+				},
+				{
+					"name": "Generate Authentication Token Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e06f10be-77d8-41d8-86ba-449a421ad7ae",
+								"type": "text/javascript",
+								"exec": [
+									"var token = postman.getResponseHeader(\"X-auth-access-token\");",
+									"var domain_uuid = postman.getResponseHeader(\"DOMAIN_UUID\");",
+									"postman.setEnvironmentVariable(\"fmc_token\", token);",
+									"postman.setEnvironmentVariable(\"fmc_domain\", domain_uuid);"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{fmc_pasword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{fmc_user}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {},
+						"url": {
+							"raw": "https://{{fmc_hostname}}/api/fmc_platform/v1/auth/generatetoken",
+							"protocol": "https",
+							"host": [
+								"{{fmc_hostname}}"
+							],
+							"path": [
+								"api",
+								"fmc_platform",
+								"v1",
+								"auth",
+								"generatetoken"
+							]
+						},
+						"description": "FMC REST API call to generate authentication token for subsequent API calls"
+					},
+					"response": []
+				},
+				{
+					"name": "10.) Add custom intelligence Feed into FMC",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-auth-access-token",
+								"value": "{{fmc_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"startHour\": 2,\r\n  \"name\": \"FirstNameLastName\",\r\n  \"description\": \"Feed of Ransomware Domains from TG\",\r\n  \"feedType\": \"stix\",\r\n  \"feedContent\": \"stix\",\r\n  \"delivery\": \"url\",\r\n  \"uri\": \"{{threatgrid_feed}}\",\r\n  \"refresh\": 1440,\r\n  \"version\": \"1.0.0\",\r\n  \"downloadOn\": true,\r\n  \"params\": {\r\n    \"selfSignedServerCertificate\": \"true\",\r\n    \"hostnameVerifier\": \"allow_all\"\r\n  },\r\n  \"property\": {\r\n    \"ttl\": 90,\r\n    \"publish\": true,\r\n    \"action\": \"monitor\"\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "https://{{fmc_hostname}}/api/fmc_tid/v1/domain/{{fmc_domain}}/tid/source",
+							"protocol": "https",
+							"host": [
+								"{{fmc_hostname}}"
+							],
+							"path": [
+								"api",
+								"fmc_tid",
+								"v1",
+								"domain",
+								"{{fmc_domain}}",
+								"tid",
+								"source"
+							]
+						},
+						"description": "REST call to add a custom intelligence feed"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
